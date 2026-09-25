@@ -1,0 +1,65 @@
+/* Admin view styles */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  padding: var(--space-xl);
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.menuActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+/* Stats grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-2xl);
+}
+
+/* Ventas por día */
+.ventasDia {
+  margin-bottom: var(--space-2xl);
+}
+
+.ventasDia h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  font-size: 1.125rem;
+}
+
+/* Historial */
+.ventasHistorial {
+  margin-bottom: var(--space-xl);
+}
+
+.ventasHistorial h3 {
+  margin-bottom: var(--space-md);
+  font-size: 1.125rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .content {
+    padding: var(--space-md);
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

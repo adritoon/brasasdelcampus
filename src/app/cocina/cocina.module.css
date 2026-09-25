@@ -1,0 +1,186 @@
+/* Cocina view styles */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--carbon-950);
+}
+
+.headerStats {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.headerStat {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--smoke-400);
+}
+
+/* 3-column Kanban */
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  flex: 1;
+  overflow: hidden;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--carbon-800);
+  overflow: hidden;
+}
+
+.column:last-child {
+  border-right: none;
+}
+
+.columnHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid;
+}
+
+.columnPending {
+  color: var(--amber-400);
+  border-bottom-color: var(--amber-500);
+}
+
+.columnCooking {
+  color: var(--brick-300);
+  border-bottom-color: var(--brick-500);
+}
+
+.columnReady {
+  color: #6cb67e;
+  border-bottom-color: var(--success);
+}
+
+.columnBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Order cards */
+.orderCard {
+  background: var(--carbon-900);
+  border: 1px solid var(--carbon-700);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.orderReady {
+  border-color: rgba(74, 124, 89, 0.3);
+  background: rgba(74, 124, 89, 0.05);
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.orderMesa {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.orderMesaLabel {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--cream-50);
+}
+
+.orderTime {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--smoke-400);
+}
+
+.orderItems {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.orderItems li {
+  display: flex;
+  gap: var(--space-sm);
+  font-size: 0.9375rem;
+  color: var(--smoke-200);
+}
+
+.orderItemQty {
+  font-weight: 700;
+  color: var(--amber-400);
+  min-width: 2rem;
+  font-family: var(--font-heading);
+}
+
+.orderNotas {
+  font-size: 0.8125rem;
+  color: var(--smoke-300);
+  background: var(--carbon-800);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  border-left: 2px solid var(--amber-500);
+}
+
+.orderNotas strong {
+  color: var(--amber-400);
+}
+
+.readyLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  background: rgba(74, 124, 89, 0.1);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #6cb67e;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+
+  .column {
+    border-right: none;
+    border-bottom: 1px solid var(--carbon-700);
+  }
+
+  .columnBody {
+    max-height: 50vh;
+  }
+
+  .headerStats {
+    display: none;
+  }
+}
