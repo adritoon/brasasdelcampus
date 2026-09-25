@@ -133,19 +133,7 @@ export default function PublicPage() {
           <div className={styles.aboutGrid}>
             <div className={styles.aboutText}>
               <p>
-                Brasas del Campus nació como un proyecto de amigos que querían
-                hacer buena parrilla cerca de la universidad, sin pretensiones
-                ni precios inflados. Un local chico con mesas de madera, humo
-                de leña y la música justa.
-              </p>
-              <p>
-                Cada corte se marina mínimo 12 horas. El pollo se cocina en
-                horno de carbón, no eléctrico. La chicha morada es de la casa,
-                hecha con maíz morado de Cañete.
-              </p>
-              <p>
-                No somos franquicia. Somos un equipo de 8 personas que le meten
-                punche todos los días.
+                [Colocar aquí la historia del restaurante]
               </p>
             </div>
             <div className={styles.aboutDetails}>
