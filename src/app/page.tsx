@@ -55,12 +55,12 @@ export default function PublicPage() {
       {/* Intro */}
       <header className={styles.intro}>
         <div className={styles.introContent}>
-          <p className={styles.tagline}>Parrilla artesanal</p>
-          <h1>Carne al fuego,<br />como debe ser.</h1>
+          <p className={styles.tagline}>Pollería y Parrillas</p>
+          <h1>El gustito parrillero<br />que buscabas.</h1>
           <p className={styles.introDesc}>
-            Anticuchos, costillar BBQ, pollo a la brasa y todo lo que un buen
-            fuego puede hacer. Acá no hay atajos — marinamos con tiempo,
-            cocinamos con leña y servimos con ganas.
+            El verdadero pollo a la brasa, jugoso y con papas bien crocantes. 
+            Anticuchos de corazón, cortes a la parrilla bien servidos y las cremas 
+            de la casa para comer rico y sin complicaciones.
           </p>
           <div className={styles.introCta}>
             <a href="#carta" className="btn btn-primary btn-lg">

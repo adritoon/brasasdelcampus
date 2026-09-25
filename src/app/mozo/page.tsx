@@ -137,7 +137,7 @@ export default function MozoPage() {
         </header>
 
         <div className={styles.mesasContainer}>
-          <h2 className={styles.mesasTitle}>Seleccioná una mesa</h2>
+          <h2 className={styles.mesasTitle}>Selecciona una mesa</h2>
           <div className={styles.mesasGrid}>
             {Array.from({ length: TOTAL_MESAS }, (_, i) => i + 1).map(
               (num) => (
@@ -243,7 +243,7 @@ export default function MozoPage() {
             <h3>Pedido nuevo</h3>
             {carrito.length === 0 ? (
               <p className={styles.cartEmpty}>
-                Agregá items del menú para armar el pedido.
+                Agrega items del menú para armar el pedido.
               </p>
             ) : (
               <>

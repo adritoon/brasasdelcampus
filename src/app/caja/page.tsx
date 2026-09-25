@@ -167,7 +167,7 @@ export default function CajaPage() {
           {mesaActiva === null ? (
             <div className="empty-state">
               <Receipt size={48} />
-              <p>Seleccioná una mesa para ver la cuenta.</p>
+              <p>Selecciona una mesa para ver la cuenta.</p>
             </div>
           ) : (
             <>

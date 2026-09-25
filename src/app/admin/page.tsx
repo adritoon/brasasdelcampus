@@ -240,7 +240,7 @@ export default function AdminPage() {
                   {menu.length === 0 && (
                     <tr>
                       <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--smoke-400)' }}>
-                        No hay platos cargados. Agregá uno o cargá el menú de ejemplo.
+                        No hay platos cargados. Agrega uno o carga el menú de ejemplo.
                       </td>
                     </tr>
                   )}
@@ -549,7 +549,7 @@ export default function AdminPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>Eliminar plato</h2>
             <p style={{ color: 'var(--smoke-300)', marginBottom: 'var(--space-lg)' }}>
-              ¿Seguro que querés eliminar este plato? Esta acción no se puede deshacer.
+              ¿Seguro que quieres eliminar este plato? Esta acción no se puede deshacer.
             </p>
             <div style={{ display: 'flex', gap: 'var(--space-sm)', justifyContent: 'flex-end' }}>
               <button className="btn btn-ghost" onClick={() => setConfirmDelete(null)}>

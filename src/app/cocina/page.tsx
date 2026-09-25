@@ -77,7 +77,7 @@ export default function CocinaPage() {
       {orders.length === 0 ? (
         <div className="empty-state">
           <ChefHat size={48} />
-          <p>No hay pedidos por ahora. Tranqui.</p>
+          <p>No hay pedidos por ahora.</p>
         </div>
       ) : (
         <div className={styles.columns}>
