@@ -86,7 +86,7 @@ export function subscribeToOrdersByMesa(
   const q = query(
     collection(db, 'pedidos'),
     where('mesa', '==', mesa),
-    where('estado', 'in', ['pendiente', 'preparando', 'listo']),
+    where('estado', 'in', ['pendiente', 'preparando', 'listo', 'entregado']),
     orderBy('creadoEn', 'desc')
   );
 
@@ -353,4 +353,17 @@ export async function seedMenu(): Promise<void> {
   for (const item of menuItems) {
     await addDoc(collection(db, 'menu'), item);
   }
+}
+
+// ============================================
+// UTILIDADES (Solo para desarrollo/pruebas)
+// ============================================
+export async function limpiarBaseDeDatos(): Promise<void> {
+  const pedidosSnap = await getDocs(collection(db, 'pedidos'));
+  const pedidosPromises = pedidosSnap.docs.map(d => deleteDoc(doc(db, 'pedidos', d.id)));
+  
+  const ventasSnap = await getDocs(collection(db, 'ventas'));
+  const ventasPromises = ventasSnap.docs.map(d => deleteDoc(doc(db, 'ventas', d.id)));
+  
+  await Promise.all([...pedidosPromises, ...ventasPromises]);
 }

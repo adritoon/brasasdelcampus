@@ -13,7 +13,9 @@ import {
   DollarSign,
   CalendarDays,
   BarChart3,
+  Download,
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import {
   subscribeToMenu,
   addMenuItem,
@@ -21,6 +23,7 @@ import {
   deleteMenuItem,
   subscribeToVentas,
   seedMenu,
+  limpiarBaseDeDatos,
 } from '@/lib/firestore';
 import type { MenuItem, Venta } from '@/lib/types';
 import { CATEGORIAS } from '@/lib/types';
@@ -34,6 +37,7 @@ const emptyItem: Omit<MenuItem, 'id'> = {
   precio: 0,
   categoria: 'Parrilla',
   disponible: true,
+  imagen: '',
 };
 
 export default function AdminPage() {
@@ -148,6 +152,18 @@ export default function AdminPage() {
           <div className={styles.menuActions}>
             <h2>Gestión del menú</h2>
             <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+              <button
+                className="btn btn-ghost"
+                onClick={async () => {
+                  if (window.confirm('¿Seguro que deseas limpiar todos los pedidos y ventas de la base de datos? Esto no borrará el menú.')) {
+                    await limpiarBaseDeDatos();
+                    alert('Pedidos y ventas eliminados correctamente.');
+                  }
+                }}
+                style={{ color: 'var(--brick-400)' }}
+              >
+                Limpiar Base de Datos
+              </button>
               {menu.length === 0 && !seeded && (
                 <button className="btn btn-ghost" onClick={handleSeedMenu}>
                   Cargar menú de ejemplo
@@ -326,7 +342,28 @@ export default function AdminPage() {
 
           {/* Historial detallado */}
           <div className={styles.ventasHistorial}>
-            <h3>Últimas ventas</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0 }}>Últimas ventas</h3>
+              <button className="btn btn-ghost" onClick={() => {
+                const data = ventas.map(v => ({
+                  'ID Venta': v.id,
+                  'Fecha': new Date(v.cerradoEn).toLocaleDateString('es-PE'),
+                  'Hora': new Date(v.cerradoEn).toLocaleTimeString('es-PE'),
+                  'Mesa': v.mesa,
+                  'Método de Pago': v.metodoPago.toUpperCase(),
+                  'Detalle': v.items.map(it => `${it.cantidad}x ${it.nombre}`).join(' | '),
+                  'Total (S/)': Number(v.total.toFixed(2)),
+                }));
+                const ws = XLSX.utils.json_to_sheet(data);
+                ws['!cols'] = [{wch: 25}, {wch: 12}, {wch: 10}, {wch: 10}, {wch: 15}, {wch: 60}, {wch: 12}];
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Ventas");
+                XLSX.writeFile(wb, "Reporte_Ventas_Brasas.xlsx");
+              }} style={{ color: 'var(--amber-400)' }}>
+                <Download size={16} />
+                Exportar Excel
+              </button>
+            </div>
             {ventas.length === 0 ? (
               <p style={{ color: 'var(--smoke-400)' }}>Sin ventas registradas aún.</p>
             ) : (
@@ -445,6 +482,16 @@ export default function AdminPage() {
               </div>
             </div>
 
+            <div className="form-group">
+              <label>URL de imagen (opcional)</label>
+              <input
+                className="input"
+                value={nuevoItem.imagen || ''}
+                onChange={(e) => setNuevoItem({ ...nuevoItem, imagen: e.target.value })}
+                placeholder="https://ejemplo.com/foto-del-plato.jpg"
+              />
+            </div>
+
             <button
               className="btn btn-primary"
               style={{ width: '100%', justifyContent: 'center' }}
@@ -515,6 +562,16 @@ export default function AdminPage() {
                   ))}
                 </select>
               </div>
+            </div>
+
+            <div className="form-group">
+              <label>URL de imagen (opcional)</label>
+              <input
+                className="input"
+                value={editando.imagen || ''}
+                onChange={(e) => setEditando({ ...editando, imagen: e.target.value })}
+                placeholder="https://ejemplo.com/foto-del-plato.jpg"
+              />
             </div>
 
             <div className="form-group">

@@ -11,8 +11,9 @@ import {
   StickyNote,
   Check,
   ShoppingCart,
+  UtensilsCrossed,
 } from 'lucide-react';
-import { subscribeToMenu, createOrder, subscribeToOrdersByMesa } from '@/lib/firestore';
+import { subscribeToMenu, createOrder, subscribeToOrdersByMesa, updateOrderStatus } from '@/lib/firestore';
 import type { MenuItem, OrderItem, Order } from '@/lib/types';
 import { TOTAL_MESAS, CATEGORIAS } from '@/lib/types';
 import styles from './mozo.module.css';
@@ -198,38 +199,49 @@ export default function MozoPage() {
             ))}
           </div>
 
-          <div className={styles.menuList}>
+          <div className={styles.menuGrid}>
             {menuFiltrado.map((item) => {
               const qty = cantidadEnCarrito(item.id);
               return (
-                <div key={item.id} className={styles.menuRow}>
-                  <div className={styles.menuRowInfo}>
-                    <span className={styles.menuRowName}>{item.nombre}</span>
-                    <span className={styles.menuRowPrice}>
+                <div
+                  key={item.id}
+                  className={`${styles.menuCard} ${qty > 0 ? styles.menuCardSelected : ''}`}
+                  onClick={() => agregarAlCarrito(item)}
+                >
+                  {qty > 0 && (
+                    <span className={styles.menuCardBadge}>{qty}</span>
+                  )}
+                  {item.imagen ? (
+                    <img
+                      src={item.imagen}
+                      alt={item.nombre}
+                      className={styles.menuCardImg}
+                    />
+                  ) : (
+                    <div className={styles.menuCardImgPlaceholder}>
+                      <UtensilsCrossed size={24} />
+                    </div>
+                  )}
+                  <div className={styles.menuCardBody}>
+                    <span className={styles.menuCardName}>{item.nombre}</span>
+                    <span className={styles.menuCardPrice}>
                       S/ {item.precio.toFixed(2)}
                     </span>
                   </div>
-                  <div className={styles.menuRowActions}>
-                    {qty > 0 ? (
-                      <div className="qty-control">
-                        <button onClick={() => cambiarCantidad(item.id, -1)}>
-                          <Minus size={14} />
-                        </button>
-                        <span>{qty}</span>
-                        <button onClick={() => cambiarCantidad(item.id, 1)}>
-                          <Plus size={14} />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => agregarAlCarrito(item)}
-                      >
-                        <Plus size={14} />
-                        Agregar
+                  {qty > 0 && (
+                    <div
+                      className={styles.menuCardQty}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button onClick={() => cambiarCantidad(item.id, -1)}>
+                        <Minus size={14} />
                       </button>
-                    )}
-                  </div>
+                      <span>{qty}</span>
+                      <button onClick={() => cambiarCantidad(item.id, 1)}>
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -312,12 +324,19 @@ export default function MozoPage() {
           {/* Pedidos activos de la mesa */}
           {pedidosMesa.length > 0 && (
             <div className={styles.activePedidos}>
-              <h3>Pedidos activos</h3>
+              <h3>Pedidos de esta mesa</h3>
               {pedidosMesa.map((pedido) => (
-                <div key={pedido.id} className={styles.activePedido}>
+                <div
+                  key={pedido.id}
+                  className={`${styles.activePedido} ${pedido.estado === 'entregado' ? styles.activePedidoServido : ''}`}
+                >
                   <div className={styles.activePedidoHeader}>
-                    <span className={`badge badge-${pedido.estado === 'pendiente' ? 'pending' : pedido.estado === 'preparando' ? 'cooking' : 'ready'}`}>
-                      {pedido.estado}
+                    <span className={`badge badge-${
+                      pedido.estado === 'pendiente' ? 'pending' :
+                      pedido.estado === 'preparando' ? 'cooking' :
+                      pedido.estado === 'listo' ? 'ready' : 'closed'
+                    }`}>
+                      {pedido.estado === 'entregado' ? 'servido' : pedido.estado}
                     </span>
                     <span className={styles.activePedidoTime}>
                       {new Date(pedido.creadoEn).toLocaleTimeString('es-PE', {
@@ -334,10 +353,14 @@ export default function MozoPage() {
                     ))}
                   </ul>
                   {pedido.estado === 'listo' && (
-                    <div className={styles.readyBanner}>
+                    <button
+                      className={styles.readyBanner}
+                      onClick={() => updateOrderStatus(pedido.id, 'entregado')}
+                      style={{ width: '100%', border: 'none', cursor: 'pointer' }}
+                    >
                       <Check size={14} />
-                      Listo para servir
-                    </div>
+                      Ya lo llevé a la mesa
+                    </button>
                   )}
                 </div>
               ))}

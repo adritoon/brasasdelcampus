@@ -41,6 +41,7 @@ export default function CajaPage() {
       'pendiente',
       'preparando',
       'listo',
+      'entregado',
     ]);
     return unsub;
   }, []);
@@ -201,8 +202,8 @@ export default function CajaPage() {
                 {pedidosDeMesa.map((pedido) => (
                   <div key={pedido.id} className={styles.pedidoCard}>
                     <div className={styles.pedidoCardHeader}>
-                      <span className={`badge badge-${pedido.estado === 'pendiente' ? 'pending' : pedido.estado === 'preparando' ? 'cooking' : 'ready'}`}>
-                        {pedido.estado}
+                      <span className={`badge badge-${pedido.estado === 'pendiente' ? 'pending' : pedido.estado === 'preparando' ? 'cooking' : pedido.estado === 'listo' ? 'ready' : 'closed'}`}>
+                        {pedido.estado === 'entregado' ? 'servido' : pedido.estado}
                       </span>
                       <span className={styles.pedidoTime}>
                         {new Date(pedido.creadoEn).toLocaleTimeString('es-PE', {
