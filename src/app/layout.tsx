@@ -20,13 +20,18 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+import PwaRegistry from "@/components/pwa-registry";
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es">
       <head>
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
-      <body>{children}</body>
+      <body>
+        <PwaRegistry />
+        {children}
+      </body>
     </html>
   );
 }
