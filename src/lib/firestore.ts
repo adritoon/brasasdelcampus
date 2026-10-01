@@ -16,7 +16,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { MenuItem, Order, OrderItem, OrderStatus, Venta } from './types';
+import type { MenuItem, Order, OrderItem, OrderStatus, Venta, Pago } from './types';
 
 // ============================================
 // MENÚ
@@ -158,34 +158,59 @@ export async function addItemsToOrder(id: string, newItems: OrderItem[]): Promis
 // VENTAS
 // ============================================
 
-export async function closeOrder(
-  orderId: string,
-  metodoPago: Venta['metodoPago']
+
+
+export async function closeTableAccount(
+  mesa: number,
+  pedidos: Order[],
+  metodoPago: Venta['metodoPago'],
+  pagos?: Pago[]
 ): Promise<string> {
-  // Obtener datos del pedido
-  const snapshot = await getDocs(
-    query(collection(db, 'pedidos'), where('__name__', '==', orderId))
-  );
+  if (pedidos.length === 0) throw new Error('No hay pedidos para cerrar');
 
-  if (snapshot.empty) throw new Error('Pedido no encontrado');
+  // Consolidar todos los items
+  const itemsConsolidados = pedidos.reduce<OrderItem[]>((acc, pedido) => {
+    pedido.items.forEach(item => {
+      const existing = acc.find(a => a.menuItemId === item.menuItemId);
+      if (existing) {
+        existing.cantidad += item.cantidad;
+      } else {
+        acc.push({ ...item });
+      }
+    });
+    return acc;
+  }, []);
 
-  const orderData = snapshot.docs[0].data();
+  const totalMesa = pedidos.reduce((sum, p) => sum + p.total, 0);
 
-  // Crear registro de venta
-  const ventaRef = await addDoc(collection(db, 'ventas'), {
-    mesa: orderData.mesa,
-    items: orderData.items,
-    total: orderData.total,
+  // Crear registro único de venta
+  const ventaData: Record<string, unknown> = {
+    mesa,
+    items: itemsConsolidados,
+    total: totalMesa,
     metodoPago,
     cerradoEn: Timestamp.now(),
-    pedidoId: orderId,
-  });
+    pedidoId: pedidos.map(p => p.id).join(','), // Guardar todos los IDs para referencia
+  };
 
-  // Marcar pedido como entregado
-  await updateDoc(doc(db, 'pedidos', orderId), {
-    estado: 'entregado' as OrderStatus,
-    actualizadoEn: Timestamp.now(),
-  });
+  if (pagos && pagos.length > 0) {
+    ventaData.pagos = pagos.map(p => {
+      const cleanP: any = { metodo: p.metodo, monto: p.monto };
+      if (p.recibido !== undefined) cleanP.recibido = p.recibido;
+      if (p.items !== undefined) cleanP.items = p.items;
+      return cleanP;
+    });
+  }
+
+  const ventaRef = await addDoc(collection(db, 'ventas'), ventaData);
+
+  // Marcar todos los pedidos como pagados
+  for (const pedido of pedidos) {
+    await updateDoc(doc(db, 'pedidos', pedido.id), {
+      estado: 'pagado' as OrderStatus,
+      actualizadoEn: Timestamp.now(),
+    });
+  }
 
   return ventaRef.id;
 }

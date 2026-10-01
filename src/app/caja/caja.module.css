@@ -183,6 +183,41 @@
   color: var(--amber-400);
 }
 
+/* Toggle dividir cuenta */
+.dividirToggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.dividirBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--carbon-800);
+  border: 1px solid var(--carbon-600);
+  border-radius: var(--radius-md);
+  color: var(--smoke-300);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.dividirBtn:hover {
+  border-color: var(--smoke-400);
+}
+
+.dividirBtnActive {
+  border-color: var(--amber-500);
+  background: rgba(212, 148, 10, 0.1);
+  color: var(--amber-400);
+}
+
+/* Métodos de pago */
 .metodos {
   margin-bottom: var(--space-md);
 }
@@ -225,6 +260,187 @@
   border-color: var(--amber-500);
   background: rgba(212, 148, 10, 0.1);
   color: var(--amber-400);
+}
+
+/* Vuelto */
+.vueltoSection {
+  margin-bottom: var(--space-md);
+}
+
+.vueltoResult {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md);
+  margin-top: var(--space-sm);
+  background: var(--carbon-800);
+  border: 1px solid rgba(108, 182, 126, 0.3);
+  border-radius: var(--radius-md);
+}
+
+.vueltoResult span:first-child {
+  color: var(--smoke-300);
+  font-size: 0.9375rem;
+}
+
+.vueltoAmount {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #6cb67e;
+}
+
+/* Pago dividido */
+.splitSection {
+  margin-bottom: var(--space-md);
+}
+
+.splitAdd {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.splitList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.splitItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--carbon-800);
+  border: 1px solid var(--carbon-700);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--cream-50);
+}
+
+.splitRemove {
+  background: none;
+  border: none;
+  color: var(--smoke-400);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.splitRemove:hover {
+  color: var(--danger);
+}
+
+.splitSummary {
+  background: var(--carbon-800);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  border: 1px solid var(--carbon-700);
+}
+
+.splitSummaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xs) 0;
+  font-size: 0.875rem;
+  color: var(--smoke-200);
+}
+
+.splitSummaryRow:last-child {
+  border-top: 1px solid var(--carbon-600);
+  padding-top: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+/* Boleta / Comprobante */
+.boleta {
+  background: #fff;
+  color: #000;
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  font-family: 'Courier New', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.boleta .header {
+  text-align: center;
+  margin-bottom: 12px;
+  border-bottom: 1px dashed #000;
+  padding-bottom: 8px;
+}
+
+.boleta .header h1 {
+  font-size: 1rem;
+  margin-bottom: 2px;
+  color: #000;
+}
+
+.boleta .header p {
+  font-size: 0.6875rem;
+  color: #333;
+}
+
+.boleta .info {
+  font-size: 0.6875rem;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.boleta .info p {
+  margin: 1px 0;
+}
+
+.boleta .sep {
+  border-top: 1px dashed #999;
+  margin: 6px 0;
+}
+
+.boleta .items {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+}
+
+.boleta .items td {
+  padding: 2px 0;
+  color: #000;
+}
+
+.boleta .items .right {
+  text-align: right;
+}
+
+.boleta .total {
+  font-size: 1rem;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+  color: #000;
+}
+
+.boleta .pago {
+  font-size: 0.6875rem;
+  margin: 2px 0;
+  display: flex;
+  justify-content: space-between;
+  color: #333;
+}
+
+.boleta .footer {
+  text-align: center;
+  font-size: 0.625rem;
+  margin-top: 12px;
+  border-top: 1px dashed #999;
+  padding-top: 8px;
+  color: #666;
 }
 
 /* Modal agregar items */

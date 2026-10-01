@@ -19,7 +19,7 @@ export interface OrderItem {
   notas?: string;
 }
 
-export type OrderStatus = 'pendiente' | 'preparando' | 'listo' | 'entregado';
+export type OrderStatus = 'pendiente' | 'preparando' | 'listo' | 'entregado' | 'pagado';
 
 export interface Order {
   id: string;
@@ -38,12 +38,22 @@ export interface Mesa {
   pedidoActivo?: string; // ID del pedido activo
 }
 
+export type MetodoPago = 'efectivo' | 'tarjeta' | 'yape' | 'plin';
+
+export interface Pago {
+  metodo: MetodoPago;
+  monto: number;
+  recibido?: number;
+  items?: string[]; // IDs unitarios de los items cubiertos por este pago
+}
+
 export interface Venta {
   id: string;
   mesa: number;
   items: OrderItem[];
   total: number;
-  metodoPago: 'efectivo' | 'tarjeta' | 'yape' | 'plin';
+  metodoPago: MetodoPago;
+  pagos?: Pago[];
   cerradoEn: Date;
 }
 
