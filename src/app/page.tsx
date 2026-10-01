@@ -65,14 +65,14 @@ export default function PublicPage() {
       {/* Intro */}
       <header className={styles.intro}>
         <div className={styles.introContent}>
-          <p className={styles.tagline}>Pollería y Parrillas</p>
-          <h1>El gustito parrillero<br />que buscabas.</h1>
-          <p className={styles.introDesc}>
+          <p className={`${styles.tagline} animate-fade-in-up`}>Pollería y Parrillas</p>
+          <h1 className="animate-fade-in-up delay-100">El gustito parrillero<br />que buscabas.</h1>
+          <p className={`${styles.introDesc} animate-fade-in-up delay-200`}>
             El verdadero pollo a la brasa, jugoso y con papas bien crocantes. 
             Anticuchos de corazón, cortes a la parrilla bien servidos y las cremas 
             de la casa para comer rico y sin complicaciones.
           </p>
-          <div className={styles.introCta}>
+          <div className={`${styles.introCta} animate-fade-in-up delay-300`}>
             <a href="#carta" className="btn btn-primary btn-lg">
               Ver la carta
               <ChevronRight size={18} />
@@ -119,22 +119,28 @@ export default function PublicPage() {
                   <p>No hay platos en esta categoría por ahora.</p>
                 </div>
               ) : (
-                menuFiltrado.map((item) => (
-                  <article key={item.id} className={styles.menuItem}>
-                    <div style={{ display: 'flex', gap: 'var(--space-md)', flex: 1 }}>
-                      {item.imagen && (
-                        <img src={item.imagen} alt={item.nombre} className={styles.menuItemImage} />
-                      )}
-                      <div className={styles.menuItemBody}>
-                        <h3>{item.nombre}</h3>
-                        <p>{item.descripcion}</p>
+                <div className="animate-fade-in">
+                  {menuFiltrado.map((item, idx) => (
+                    <article
+                      key={item.id}
+                      className={styles.menuItem}
+                      style={{ animationDelay: `${idx * 50}ms` }}
+                    >
+                      <div style={{ display: 'flex', gap: 'var(--space-md)', flex: 1 }}>
+                        {item.imagen && (
+                          <img src={item.imagen} alt={item.nombre} className={styles.menuItemImage} />
+                        )}
+                        <div className={styles.menuItemBody}>
+                          <h3>{item.nombre}</h3>
+                          <p>{item.descripcion}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className={styles.menuItemPrice}>
-                      S/ {item.precio.toFixed(2)}
-                    </div>
-                  </article>
-                ))
+                      <div className={styles.menuItemPrice}>
+                        S/ {item.precio.toFixed(2)}
+                      </div>
+                    </article>
+                  ))}
+                </div>
               )}
             </div>
           )}
@@ -148,33 +154,11 @@ export default function PublicPage() {
           <div className={styles.aboutGrid}>
             <div className={styles.aboutText}>
               <p>
-                [Colocar aquí la historia del restaurante]
+                Nuestra historia comenzó con una pasión: hacer que cada bocado tenga sabor a hogar y a fuego. Somos más que una pollería, somos el punto de encuentro de amigos, familias y estudiantes que buscan una comida contundente después de un día largo.
               </p>
-            </div>
-            <div className={styles.aboutDetails}>
-              <div className={styles.detailItem}>
-                <Clock size={18} />
-                <div>
-                  <strong>Horario</strong>
-                  <span>Lun – Sáb: 12:00 – 22:00</span>
-                  <span>Domingos cerrado</span>
-                </div>
-              </div>
-              <div className={styles.detailItem}>
-                <MapPin size={18} />
-                <div>
-                  <strong>Ubicación</strong>
-                  <span>Jr. Los Pinos 342, cerca del campus</span>
-                  <span>A 2 cuadras de la puerta principal</span>
-                </div>
-              </div>
-              <div className={styles.detailItem}>
-                <Phone size={18} />
-                <div>
-                  <strong>Contacto</strong>
-                  <span>WhatsApp: 987 654 321</span>
-                </div>
-              </div>
+              <p>
+                Asamos nuestros pollos con leña seleccionada y preparamos cortes a la parrilla en su punto exacto, manteniendo esa tradición artesanal que nos caracteriza desde el primer día.
+              </p>
             </div>
           </div>
         </div>
@@ -183,23 +167,56 @@ export default function PublicPage() {
       {/* Footer */}
       <footer id="contacto" className={styles.footer}>
         <div className="container">
-          <div className={styles.footerInner}>
-            <div className={styles.footerBrand}>
-              <Flame size={18} />
-              <span>Brasas del Campus</span>
+          <div className={styles.footerGrid}>
+            <div className={styles.detailItem}>
+              <Flame size={20} />
+              <div>
+                <strong style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', color: 'var(--cream-50)', marginBottom: '8px', display: 'block' }}>Brasas del Campus</strong>
+                <p style={{ color: 'var(--smoke-400)', fontSize: '0.875rem', lineHeight: 1.6, maxWidth: '250px' }}>
+                  El verdadero pollo a la brasa y cortes parrilleros. Sabor artesanal, como en casa.
+                </p>
+              </div>
             </div>
-            <p className={styles.footerCopy}>
-              Hecho con fuego y ganas. Todos los derechos reservados.
-            </p>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.footerSocial}
-            >
-              <ExternalLink size={18} />
-              @brasasdelcampus
-            </a>
+
+            <div className={styles.detailItem}>
+              <MapPin size={18} />
+              <div>
+                <strong>Ubicación</strong>
+                <span>Jr. Los Pinos 342, cerca del campus</span>
+                <span>A 2 cuadras de la puerta principal</span>
+              </div>
+            </div>
+
+            <div className={styles.detailItem}>
+              <Clock size={18} />
+              <div>
+                <strong>Horario</strong>
+                <span>Lun – Sáb: 12:00 – 22:00</span>
+                <span>Domingos cerrado</span>
+              </div>
+            </div>
+
+            <div className={styles.detailItem}>
+              <Phone size={18} />
+              <div>
+                <strong>Contacto</strong>
+                <span>WhatsApp: 987 654 321</span>
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.footerSocial}
+                  style={{ marginTop: '12px' }}
+                >
+                  <ExternalLink size={16} />
+                  @brasasdelcampus
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <div className={styles.footerCopy}>
+            &copy; {new Date().getFullYear()} Brasas del Campus. Todos los derechos reservados.
           </div>
         </div>
       </footer>
