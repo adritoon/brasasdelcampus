@@ -121,9 +121,14 @@ export default function PublicPage() {
               ) : (
                 menuFiltrado.map((item) => (
                   <article key={item.id} className={styles.menuItem}>
-                    <div className={styles.menuItemBody}>
-                      <h3>{item.nombre}</h3>
-                      <p>{item.descripcion}</p>
+                    <div style={{ display: 'flex', gap: 'var(--space-md)', flex: 1 }}>
+                      {item.imagen && (
+                        <img src={item.imagen} alt={item.nombre} className={styles.menuItemImage} />
+                      )}
+                      <div className={styles.menuItemBody}>
+                        <h3>{item.nombre}</h3>
+                        <p>{item.descripcion}</p>
+                      </div>
                     </div>
                     <div className={styles.menuItemPrice}>
                       S/ {item.precio.toFixed(2)}

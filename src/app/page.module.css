@@ -143,6 +143,15 @@
   transition: background var(--transition-fast);
 }
 
+.menuItemImage {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  border: 1px solid var(--carbon-700);
+}
+
 .menuItem:last-child {
   border-bottom: none;
 }
