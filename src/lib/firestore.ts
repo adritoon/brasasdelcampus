@@ -7,6 +7,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  setDoc,
   getDocs,
   query,
   where,
@@ -17,6 +18,26 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { MenuItem, Order, OrderItem, OrderStatus, Venta, Pago } from './types';
+
+// ============================================
+// CATEGORIAS
+// ============================================
+
+export function subscribeToCategories(callback: (cats: string[]) => void): Unsubscribe {
+  return onSnapshot(doc(db, 'settings', 'categorias'), (docSnap) => {
+    if (docSnap.exists() && docSnap.data().lista) {
+      callback(docSnap.data().lista);
+    } else {
+      // Default fallback
+      callback(['Parrilla', 'Pollos', 'Guarniciones', 'Entradas', 'Bebidas', 'Postres']);
+    }
+  });
+}
+
+export async function updateCategories(cats: string[]): Promise<void> {
+  const ref = doc(db, 'settings', 'categorias');
+  await setDoc(ref, { lista: cats }, { merge: true });
+}
 
 // ============================================
 // MENÚ

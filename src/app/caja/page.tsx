@@ -19,9 +19,10 @@ import {
   subscribeToMenu,
   closeTableAccount,
   addItemsToOrder,
+  subscribeToCategories,
 } from '@/lib/firestore';
 import type { Order, MenuItem, OrderItem, Venta, MetodoPago, Pago } from '@/lib/types';
-import { TOTAL_MESAS, CATEGORIAS } from '@/lib/types';
+import { TOTAL_MESAS } from '@/lib/types';
 import styles from './caja.module.css';
 
 type ModalType = 'cobrar' | 'agregar' | 'boleta' | null;
@@ -47,6 +48,7 @@ export default function CajaPage() {
 
   // Items extra para agregar
   const [extraItems, setExtraItems] = useState<OrderItem[]>([]);
+  const [categorias, setCategorias] = useState<string[]>([]);
   const [catExtra, setCatExtra] = useState<string>('Bebidas');
 
   // Vuelto (efectivo)
@@ -78,6 +80,16 @@ export default function CajaPage() {
     const unsub = subscribeToMenu((items) => setMenu(items.filter((i) => i.disponible)));
     return unsub;
   }, []);
+
+  useEffect(() => {
+    const unsub = subscribeToCategories((cats) => {
+      setCategorias(cats);
+      if (cats.length > 0 && !cats.includes(catExtra)) {
+        setCatExtra(cats[0]);
+      }
+    });
+    return unsub;
+  }, [catExtra]);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -780,7 +792,7 @@ export default function CajaPage() {
             </div>
 
             <div className="tabs" style={{ marginBottom: 'var(--space-md)' }}>
-              {CATEGORIAS.map((cat) => (
+              {categorias.map((cat) => (
                 <button
                   key={cat}
                   className={`tab ${catExtra === cat ? 'active' : ''}`}

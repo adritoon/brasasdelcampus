@@ -58,16 +58,7 @@ export interface Venta {
 }
 
 // Categorías del menú
-export const CATEGORIAS = [
-  'Parrilla',
-  'Pollos',
-  'Guarniciones',
-  'Entradas',
-  'Bebidas',
-  'Postres',
-] as const;
-
-export type Categoria = typeof CATEGORIAS[number];
+export type Categoria = string;
 
 // Número total de mesas
 export const TOTAL_MESAS = 12;

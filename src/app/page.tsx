@@ -10,15 +10,25 @@ import {
   UtensilsCrossed,
   ExternalLink,
 } from 'lucide-react';
-import { subscribeToMenu } from '@/lib/firestore';
+import { subscribeToMenu, subscribeToCategories } from '@/lib/firestore';
 import type { MenuItem } from '@/lib/types';
-import { CATEGORIAS } from '@/lib/types';
 import styles from './page.module.css';
 
 export default function PublicPage() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
+  const [categorias, setCategorias] = useState<string[]>([]);
   const [categoriaActiva, setCategoriaActiva] = useState<string>('Parrilla');
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubCat = subscribeToCategories((cats) => {
+      setCategorias(cats);
+      if (cats.length > 0 && !cats.includes(categoriaActiva)) {
+        setCategoriaActiva(cats[0]);
+      }
+    });
+    return unsubCat;
+  }, [categoriaActiva]);
 
   useEffect(() => {
     // Registrar service worker para PWA
@@ -85,7 +95,7 @@ export default function PublicPage() {
 
           {/* Tabs de categoría */}
           <div className="tabs">
-            {CATEGORIAS.map((cat) => (
+            {categorias.map((cat) => (
               <button
                 key={cat}
                 className={`tab ${categoriaActiva === cat ? 'active' : ''}`}

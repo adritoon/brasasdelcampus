@@ -13,9 +13,9 @@ import {
   ShoppingCart,
   UtensilsCrossed,
 } from 'lucide-react';
-import { subscribeToMenu, createOrder, subscribeToOrdersByMesa, updateOrderStatus } from '@/lib/firestore';
+import { subscribeToMenu, createOrder, subscribeToOrdersByMesa, updateOrderStatus, subscribeToCategories } from '@/lib/firestore';
 import type { MenuItem, OrderItem, Order } from '@/lib/types';
-import { TOTAL_MESAS, CATEGORIAS } from '@/lib/types';
+import { TOTAL_MESAS } from '@/lib/types';
 import styles from './mozo.module.css';
 
 type ViewState = 'mesas' | 'pedido';
@@ -29,6 +29,7 @@ export default function MozoPage() {
   const [view, setView] = useState<ViewState>('mesas');
   const [mesaActiva, setMesaActiva] = useState<number | null>(null);
   const [carrito, setCarrito] = useState<CartItem[]>([]);
+  const [categorias, setCategorias] = useState<string[]>([]);
   const [categoriaActiva, setCategoriaActiva] = useState<string>('Parrilla');
   const [notas, setNotas] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -41,6 +42,16 @@ export default function MozoPage() {
     });
     return unsub;
   }, []);
+
+  useEffect(() => {
+    const unsub = subscribeToCategories((cats) => {
+      setCategorias(cats);
+      if (cats.length > 0 && !cats.includes(categoriaActiva)) {
+        setCategoriaActiva(cats[0]);
+      }
+    });
+    return unsub;
+  }, [categoriaActiva]);
 
   useEffect(() => {
     if (mesaActiva === null) return;
@@ -188,7 +199,7 @@ export default function MozoPage() {
         {/* Panel izquierdo: Menú */}
         <div className={styles.menuPanel}>
           <div className="tabs">
-            {CATEGORIAS.map((cat) => (
+            {categorias.map((cat) => (
               <button
                 key={cat}
                 className={`tab ${categoriaActiva === cat ? 'active' : ''}`}

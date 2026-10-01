@@ -24,12 +24,13 @@ import {
   subscribeToVentas,
   seedMenu,
   limpiarBaseDeDatos,
+  subscribeToCategories,
+  updateCategories,
 } from '@/lib/firestore';
 import type { MenuItem, Venta } from '@/lib/types';
-import { CATEGORIAS } from '@/lib/types';
 import styles from './admin.module.css';
 
-type Tab = 'menu' | 'ventas';
+type Tab = 'menu' | 'categorias' | 'ventas';
 
 const emptyItem: Omit<MenuItem, 'id'> = {
   nombre: '',
@@ -44,6 +45,8 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('menu');
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [ventas, setVentas] = useState<Venta[]>([]);
+  const [categorias, setCategorias] = useState<string[]>([]);
+  const [nuevaCategoria, setNuevaCategoria] = useState('');
   const [editando, setEditando] = useState<MenuItem | null>(null);
   const [nuevoItem, setNuevoItem] = useState<Omit<MenuItem, 'id'> | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -53,9 +56,11 @@ export default function AdminPage() {
   useEffect(() => {
     const unsub1 = subscribeToMenu(setMenu);
     const unsub2 = subscribeToVentas(setVentas);
+    const unsub3 = subscribeToCategories(setCategorias);
     return () => {
       unsub1();
       unsub2();
+      unsub3();
     };
   }, []);
 
@@ -139,6 +144,12 @@ export default function AdminPage() {
             Menú
           </button>
           <button
+            className={`tab ${tab === 'categorias' ? 'active' : ''}`}
+            onClick={() => setTab('categorias')}
+          >
+            Categorías
+          </button>
+          <button
             className={`tab ${tab === 'ventas' ? 'active' : ''}`}
             onClick={() => setTab('ventas')}
           >
@@ -147,7 +158,71 @@ export default function AdminPage() {
         </div>
       </header>
 
-      {tab === 'menu' ? (
+      {tab === 'categorias' && (
+        <div className={styles.content}>
+          <div className={styles.menuActions}>
+            <h2>Gestión de Categorías</h2>
+          </div>
+          <div className="card">
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
+              <input
+                type="text"
+                className="input"
+                placeholder="Nueva categoría..."
+                value={nuevaCategoria}
+                onChange={(e) => setNuevaCategoria(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && nuevaCategoria.trim()) {
+                    if (!categorias.includes(nuevaCategoria.trim())) {
+                      updateCategories([...categorias, nuevaCategoria.trim()]);
+                      setNuevaCategoria('');
+                      showToast('Categoría agregada');
+                    } else {
+                      showToast('La categoría ya existe');
+                    }
+                  }
+                }}
+              />
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  if (nuevaCategoria.trim() && !categorias.includes(nuevaCategoria.trim())) {
+                    updateCategories([...categorias, nuevaCategoria.trim()]);
+                    setNuevaCategoria('');
+                    showToast('Categoría agregada');
+                  }
+                }}
+              >
+                Agregar
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {categorias.map((cat, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'var(--carbon-800)', borderRadius: 'var(--radius-sm)' }}>
+                  <span>{cat}</span>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ color: 'var(--danger)' }}
+                    onClick={() => {
+                      if (window.confirm(`¿Eliminar la categoría "${cat}"?`)) {
+                        updateCategories(categorias.filter((c) => c !== cat));
+                        showToast('Categoría eliminada');
+                      }
+                    }}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              ))}
+              {categorias.length === 0 && (
+                <p style={{ color: 'var(--smoke-400)', textAlign: 'center', padding: '1rem' }}>No hay categorías registradas.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === 'menu' && (
         <div className={styles.content}>
           <div className={styles.menuActions}>
             <h2>Gestión del menú</h2>
@@ -265,7 +340,9 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
-      ) : (
+      )}
+
+      {tab === 'ventas' && (
         <div className={styles.content}>
           <h2 style={{ marginBottom: 'var(--space-xl)' }}>Historial de ventas</h2>
 
@@ -473,7 +550,7 @@ export default function AdminPage() {
                   value={nuevoItem.categoria}
                   onChange={(e) => setNuevoItem({ ...nuevoItem, categoria: e.target.value })}
                 >
-                  {CATEGORIAS.map((cat) => (
+                  {categorias.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
                     </option>
@@ -555,7 +632,7 @@ export default function AdminPage() {
                   value={editando.categoria}
                   onChange={(e) => setEditando({ ...editando, categoria: e.target.value })}
                 >
-                  {CATEGORIAS.map((cat) => (
+                  {categorias.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
                     </option>
