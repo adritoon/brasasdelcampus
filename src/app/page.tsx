@@ -112,31 +112,50 @@ export default function PublicPage() {
               <div className="spinner" />
             </div>
           ) : (
-            <div className={styles.menuGrid}>
+            <div>
               {menuFiltrado.length === 0 ? (
                 <div className="empty-state">
                   <UtensilsCrossed size={40} />
                   <p>No hay platos en esta categoría por ahora.</p>
                 </div>
               ) : (
-                <div className="animate-fade-in">
+                <div className={`${styles.menuGrid} animate-fade-in`}>
                   {menuFiltrado.map((item, idx) => (
                     <article
                       key={item.id}
-                      className={styles.menuItem}
-                      style={{ animationDelay: `${idx * 50}ms` }}
+                      className={styles.menuItemCard}
+                      style={{ animationDelay: `${idx * 40}ms` }}
                     >
-                      <div style={{ display: 'flex', gap: 'var(--space-md)', flex: 1 }}>
-                        {item.imagen && (
-                          <img src={item.imagen} alt={item.nombre} className={styles.menuItemImage} />
+                      <div className={styles.imageWrapper}>
+                        {item.imagen ? (
+                          <img
+                            src={item.imagen}
+                            alt={item.nombre}
+                            className={styles.menuItemImage}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className={styles.imagePlaceholder}>
+                            <Flame size={36} strokeWidth={1.8} />
+                            <span>Brasas del Campus</span>
+                          </div>
                         )}
-                        <div className={styles.menuItemBody}>
-                          <h3>{item.nombre}</h3>
-                          <p>{item.descripcion}</p>
-                        </div>
+                        <span className={styles.cardCategoryBadge}>{item.categoria}</span>
                       </div>
-                      <div className={styles.menuItemPrice}>
-                        S/ {item.precio.toFixed(2)}
+
+                      <div className={styles.menuItemBody}>
+                        <h3>{item.nombre}</h3>
+                        <p>{item.descripcion}</p>
+
+                        <div className={styles.cardFooter}>
+                          <div className={styles.fuegoBadge}>
+                            <Flame size={14} style={{ color: 'var(--amber-500)' }} />
+                            <span>Al carbón</span>
+                          </div>
+                          <div className={styles.menuItemPrice}>
+                            S/ {item.precio.toFixed(2)}
+                          </div>
+                        </div>
                       </div>
                     </article>
                   ))}

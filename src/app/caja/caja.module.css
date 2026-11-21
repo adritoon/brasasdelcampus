@@ -217,6 +217,129 @@
   color: var(--amber-400);
 }
 
+/* Acceso directo Yape/Plin */
+.btnYapePlin {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #742284 0%, #00bca8 100%);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(116, 34, 132, 0.3);
+  transition: all var(--transition-fast);
+}
+
+.btnYapePlin:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 188, 168, 0.4);
+  filter: brightness(1.08);
+}
+
+.btnYapePlin:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Sección QR para Yape / Plin */
+.qrCard {
+  background: var(--carbon-800);
+  border: 1px solid var(--carbon-700);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  animation: fadeIn 200ms ease;
+}
+
+.qrBox {
+  width: 72px;
+  height: 72px;
+  background: #ffffff;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.qrDetails {
+  flex: 1;
+}
+
+.qrTitle {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--cream-50);
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qrNumber {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--amber-400);
+}
+
+.qrHolder {
+  font-size: 0.75rem;
+  color: var(--smoke-400);
+}
+
+/* Selector Tipo de Comprobante */
+.comprobanteSelector {
+  margin-bottom: var(--space-md);
+}
+
+.comprobanteGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xs);
+  margin-top: 4px;
+}
+
+.comprobanteBtn {
+  padding: 0.5rem 0.25rem;
+  background: var(--carbon-800);
+  border: 1px solid var(--carbon-600);
+  border-radius: var(--radius-sm);
+  color: var(--smoke-300);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.comprobanteBtn:hover {
+  border-color: var(--smoke-400);
+}
+
+.comprobanteBtnActive {
+  border-color: var(--amber-500);
+  background: rgba(212, 148, 10, 0.15);
+  color: var(--amber-400);
+}
+
+.clienteDocInputs {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
 /* Métodos de pago */
 .metodos {
   margin-bottom: var(--space-md);

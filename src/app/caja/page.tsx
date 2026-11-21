@@ -13,6 +13,8 @@ import {
   DollarSign,
   SplitSquareHorizontal,
   Printer,
+  QrCode,
+  FileText,
 } from 'lucide-react';
 import {
   subscribeToOrders,
@@ -21,8 +23,9 @@ import {
   addItemsToOrder,
   subscribeToCategories,
 } from '@/lib/firestore';
-import type { Order, MenuItem, OrderItem, Venta, MetodoPago, Pago } from '@/lib/types';
+import type { Order, MenuItem, OrderItem, Venta, MetodoPago, Pago, TipoComprobante } from '@/lib/types';
 import { TOTAL_MESAS } from '@/lib/types';
+import { calcularIGV, validarDocumentoIdentidad } from '@/lib/billing';
 import styles from './caja.module.css';
 
 type ModalType = 'cobrar' | 'agregar' | 'boleta' | null;
@@ -31,6 +34,11 @@ interface BoletaData {
   mesa: number;
   items: OrderItem[];
   total: number;
+  subtotal: number;
+  igv: number;
+  tipoComprobante: TipoComprobante;
+  clienteDoc?: string;
+  clienteNombre?: string;
   metodoPago: string;
   pagos?: Pago[];
   fecha: Date;
@@ -53,6 +61,11 @@ export default function CajaPage() {
 
   // Vuelto (efectivo)
   const [montoRecibido, setMontoRecibido] = useState<string>('');
+
+  // Comprobante fiscal e IGV
+  const [tipoComprobante, setTipoComprobante] = useState<TipoComprobante>('boleta');
+  const [clienteDoc, setClienteDoc] = useState<string>('');
+  const [clienteNombre, setClienteNombre] = useState<string>('');
 
   // Pago dividido
   const [dividirCuenta, setDividirCuenta] = useState(false);
@@ -147,6 +160,9 @@ export default function CajaPage() {
     setPagoRecibido('');
     setPendingItems(new Set());
     setMetodoPago('efectivo');
+    setTipoComprobante('boleta');
+    setClienteDoc('');
+    setClienteNombre('');
   };
 
   const agregarPago = () => {
@@ -181,6 +197,13 @@ export default function CajaPage() {
   const cobrarMesa = async () => {
     if (!mesaActiva || pedidosDeMesa.length === 0) return;
 
+    // Validar comprobante fiscal según SUNAT
+    const validacion = validarDocumentoIdentidad(tipoComprobante, clienteDoc);
+    if (!validacion.valido) {
+      showToast(validacion.mensaje || 'Documento no válido');
+      return;
+    }
+
     // Validar pago dividido
     if (dividirCuenta && Math.abs(totalPagos - totalMesa) > 0.01) {
       showToast('El total de los pagos no coincide con la cuenta');
@@ -192,13 +215,24 @@ export default function CajaPage() {
       const pagosFinales = dividirCuenta ? pagos : undefined;
       const metodoFinal = dividirCuenta ? pagos[0]?.metodo || 'efectivo' : metodoPago;
 
-      await closeTableAccount(mesaActiva, pedidosDeMesa, metodoFinal, pagosFinales);
+      await closeTableAccount(mesaActiva, pedidosDeMesa, metodoFinal, pagosFinales, {
+        tipoComprobante,
+        clienteDoc: clienteDoc.trim(),
+        clienteNombre: clienteNombre.trim(),
+      });
 
-      // Preparar datos para la boleta
+      const desglose = calcularIGV(totalMesa);
+
+      // Preparar datos para el comprobante
       const boleta: BoletaData = {
         mesa: mesaActiva,
         items: itemsConsolidados,
-        total: totalMesa,
+        total: desglose.total,
+        subtotal: desglose.subtotal,
+        igv: desglose.igv,
+        tipoComprobante,
+        clienteDoc: clienteDoc.trim() || undefined,
+        clienteNombre: clienteNombre.trim() || undefined,
         metodoPago: dividirCuenta ? 'Dividido' : metodoFinal,
         pagos: dividirCuenta ? pagos : undefined,
         fecha: new Date(),
@@ -365,6 +399,18 @@ export default function CajaPage() {
                     Agregar item
                   </button>
                   <button
+                    className={styles.btnYapePlin}
+                    onClick={() => {
+                      resetCobro();
+                      setMetodoPago('yape');
+                      setModal('cobrar');
+                    }}
+                    disabled={pedidosDeMesa.length === 0}
+                  >
+                    <QrCode size={16} />
+                    Pagar con Yape / Plin
+                  </button>
+                  <button
                     className="btn btn-primary"
                     onClick={() => { resetCobro(); setModal('cobrar'); }}
                     disabled={pedidosDeMesa.length === 0}
@@ -455,6 +501,70 @@ export default function CajaPage() {
               <span className={styles.cobroAmount}>S/ {totalMesa.toFixed(2)}</span>
             </div>
 
+            {/* Tipo de Comprobante */}
+            <div className={styles.comprobanteSelector}>
+              <label className={styles.metodoLabel}>Tipo de Comprobante</label>
+              <div className={styles.comprobanteGrid}>
+                <button
+                  type="button"
+                  className={`${styles.comprobanteBtn} ${tipoComprobante === 'boleta' ? styles.comprobanteBtnActive : ''}`}
+                  onClick={() => setTipoComprobante('boleta')}
+                >
+                  Boleta
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.comprobanteBtn} ${tipoComprobante === 'factura' ? styles.comprobanteBtnActive : ''}`}
+                  onClick={() => setTipoComprobante('factura')}
+                >
+                  Factura
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.comprobanteBtn} ${tipoComprobante === 'ticket' ? styles.comprobanteBtnActive : ''}`}
+                  onClick={() => setTipoComprobante('ticket')}
+                >
+                  Ticket Interno
+                </button>
+              </div>
+
+              {tipoComprobante === 'factura' && (
+                <div className={styles.clienteDocInputs}>
+                  <input
+                    className="input"
+                    placeholder="RUC (11 dígitos, empieza con 10 o 20)*"
+                    maxLength={11}
+                    value={clienteDoc}
+                    onChange={(e) => setClienteDoc(e.target.value.replace(/\D/g, ''))}
+                  />
+                  <input
+                    className="input"
+                    placeholder="Razón Social*"
+                    value={clienteNombre}
+                    onChange={(e) => setClienteNombre(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {tipoComprobante === 'boleta' && (
+                <div className={styles.clienteDocInputs}>
+                  <input
+                    className="input"
+                    placeholder="DNI (Opcional, 8 dígitos)"
+                    maxLength={8}
+                    value={clienteDoc}
+                    onChange={(e) => setClienteDoc(e.target.value.replace(/\D/g, ''))}
+                  />
+                  <input
+                    className="input"
+                    placeholder="Nombre del cliente (Opcional)"
+                    value={clienteNombre}
+                    onChange={(e) => setClienteNombre(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+
             {/* Toggle dividir cuenta */}
             <div className={styles.dividirToggle}>
               <button
@@ -491,6 +601,23 @@ export default function CajaPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* QR para Yape o Plin */}
+                {(metodoPago === 'yape' || metodoPago === 'plin') && (
+                  <div className={styles.qrCard}>
+                    <div className={styles.qrBox}>
+                      <QrCode size={52} strokeWidth={2.2} />
+                    </div>
+                    <div className={styles.qrDetails}>
+                      <div className={styles.qrTitle}>
+                        <Smartphone size={16} style={{ color: metodoPago === 'yape' ? '#742284' : '#00bca8' }} />
+                        <span>Pago directo con {metodoPago.toUpperCase()}</span>
+                      </div>
+                      <div className={styles.qrNumber}>987 654 321</div>
+                      <div className={styles.qrHolder}>Brasas del Campus SAC • Titular</div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Cálculo de vuelto (solo efectivo) */}
                 {metodoPago === 'efectivo' && (
@@ -707,13 +834,28 @@ export default function CajaPage() {
               <div className="header">
                 <h1>BRASAS DEL CAMPUS</h1>
                 <p>Pollería y Parrillas</p>
-                <p>Jr. Los Pinos 342</p>
+                <p>RUC: 20608945123</p>
+                <p>Jr. Los Pinos 342 - Lima</p>
+                <p style={{ marginTop: '6px', fontWeight: 'bold', fontSize: '12px' }}>
+                  {boletaData.tipoComprobante === 'factura'
+                    ? 'FACTURA ELECTRÓNICA'
+                    : boletaData.tipoComprobante === 'boleta'
+                    ? 'BOLETA DE VENTA ELECTRÓNICA'
+                    : 'TICKET DE VENTA INTERNO'}
+                </p>
               </div>
 
               <div className="info">
                 <p>Mesa: {boletaData.mesa}</p>
                 <p>Fecha: {boletaData.fecha.toLocaleDateString('es-PE')}</p>
                 <p>Hora: {boletaData.fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}</p>
+                {boletaData.clienteDoc && (
+                  <p>
+                    {boletaData.tipoComprobante === 'factura' ? 'RUC: ' : 'DNI: '}
+                    {boletaData.clienteDoc}
+                  </p>
+                )}
+                {boletaData.clienteNombre && <p>Cliente: {boletaData.clienteNombre}</p>}
               </div>
 
               <div className="sep" />
@@ -731,8 +873,18 @@ export default function CajaPage() {
 
               <div className="sep" />
 
+              {/* Desglose de IGV oficial Perú */}
+              <div className="pago" style={{ fontSize: '11px' }}>
+                <span>Op. Gravada (Subtotal):</span>
+                <span>S/ {boletaData.subtotal.toFixed(2)}</span>
+              </div>
+              <div className="pago" style={{ fontSize: '11px' }}>
+                <span>I.G.V. (18%):</span>
+                <span>S/ {boletaData.igv.toFixed(2)}</span>
+              </div>
+
               <div className="total">
-                <span>TOTAL</span>
+                <span>TOTAL A PAGAR</span>
                 <span>S/ {boletaData.total.toFixed(2)}</span>
               </div>
 

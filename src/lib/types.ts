@@ -40,6 +40,8 @@ export interface Mesa {
 
 export type MetodoPago = 'efectivo' | 'tarjeta' | 'yape' | 'plin';
 
+export type TipoComprobante = 'boleta' | 'factura' | 'ticket';
+
 export interface Pago {
   metodo: MetodoPago;
   monto: number;
@@ -52,7 +54,13 @@ export interface Venta {
   mesa: number;
   items: OrderItem[];
   total: number;
+  subtotal?: number;
+  igv?: number;
+  descuento?: number;
   metodoPago: MetodoPago;
+  tipoComprobante?: TipoComprobante;
+  clienteDoc?: string;
+  clienteNombre?: string;
   pagos?: Pago[];
   cerradoEn: Date;
 }

@@ -30,6 +30,300 @@
   margin-bottom: var(--space-2xl);
 }
 
+/* Barra de filtros de fecha */
+.filterBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--carbon-900);
+  border: 1px solid var(--carbon-700);
+  border-radius: var(--radius-lg);
+}
+
+.filterButtons {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  background: var(--carbon-800);
+  border: 1px solid var(--carbon-600);
+  color: var(--smoke-300);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.filterBtn:hover {
+  border-color: var(--smoke-400);
+  color: var(--cream-50);
+}
+
+.filterBtnActive {
+  background: var(--amber-500);
+  color: var(--carbon-950);
+  border-color: var(--amber-500);
+  font-weight: 600;
+}
+
+.customDateRange {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 0.8125rem;
+  color: var(--smoke-400);
+}
+
+.customDateInput {
+  background: var(--carbon-800);
+  border: 1px solid var(--carbon-600);
+  border-radius: var(--radius-sm);
+  color: var(--cream-50);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* Grid de Gráficos del Dashboard */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-2xl);
+}
+
+.chartCard {
+  background: var(--carbon-900);
+  border: 1px solid var(--carbon-700);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.chartTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cream-50);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.chartSubtitle {
+  font-size: 0.75rem;
+  color: var(--smoke-400);
+}
+
+/* Gráfico 1: Top Platos Ranking */
+.rankingList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  flex: 1;
+}
+
+.rankingRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rankingInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+}
+
+.rankingName {
+  font-weight: 600;
+  color: var(--cream-50);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rankingBadge {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--carbon-800);
+  color: var(--smoke-300);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rankingBadgeTop {
+  background: var(--amber-500);
+  color: var(--carbon-950);
+}
+
+.rankingNumbers {
+  display: flex;
+  gap: var(--space-md);
+  font-family: var(--font-heading);
+}
+
+.rankingQty {
+  color: var(--smoke-300);
+  font-size: 0.75rem;
+}
+
+.rankingAmount {
+  color: var(--amber-400);
+  font-weight: 700;
+}
+
+.rankingBarBg {
+  height: 6px;
+  background: var(--carbon-800);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.rankingBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber-500), var(--brick-500));
+  border-radius: 3px;
+  transition: width 400ms ease;
+}
+
+/* Gráfico 2: Métodos de Pago */
+.paymentSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  flex: 1;
+}
+
+.paymentMultiBar {
+  display: flex;
+  height: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--carbon-800);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.paymentSegment {
+  height: 100%;
+  transition: width 400ms ease;
+}
+
+.paymentLegend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.paymentLegendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--carbon-800);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--carbon-700);
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legendLabel {
+  font-size: 0.75rem;
+  color: var(--smoke-300);
+  flex: 1;
+}
+
+.legendValues {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+}
+
+.legendMonto {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: var(--cream-50);
+  font-family: var(--font-heading);
+}
+
+.legendPercent {
+  font-size: 0.6875rem;
+  color: var(--smoke-400);
+}
+
+/* Gráfico 3: Horas Pico (Histograma) */
+.hoursHistogram {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 140px;
+  padding-top: var(--space-md);
+  border-bottom: 1px solid var(--carbon-700);
+}
+
+.hourCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.hourBar {
+  width: 100%;
+  max-width: 28px;
+  background: var(--carbon-700);
+  border-radius: 4px 4px 0 0;
+  transition: height 300ms ease, background 200ms ease;
+  min-height: 4px;
+}
+
+.hourBarActive {
+  background: linear-gradient(180deg, var(--amber-400) 0%, var(--amber-600) 100%);
+}
+
+.hourBarPeak {
+  background: linear-gradient(180deg, #e65c00 0%, var(--brick-500) 100%);
+}
+
+.hourLabel {
+  font-size: 0.6875rem;
+  color: var(--smoke-400);
+  margin-top: 4px;
+}
+
+.hourCount {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--amber-400);
+  margin-bottom: 2px;
+}
+
 /* Ventas por día */
 .ventasDia {
   margin-bottom: var(--space-2xl);
@@ -54,6 +348,12 @@
 }
 
 /* Responsive */
+@media (max-width: 900px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .content {
     padding: var(--space-md);
@@ -61,5 +361,10 @@
 
   .statsGrid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .filterBar {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

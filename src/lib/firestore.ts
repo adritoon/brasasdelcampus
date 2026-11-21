@@ -185,7 +185,13 @@ export async function closeTableAccount(
   mesa: number,
   pedidos: Order[],
   metodoPago: Venta['metodoPago'],
-  pagos?: Pago[]
+  pagos?: Pago[],
+  opcionesFiscales?: {
+    tipoComprobante?: 'boleta' | 'factura' | 'ticket';
+    clienteDoc?: string;
+    clienteNombre?: string;
+    descuento?: number;
+  }
 ): Promise<string> {
   if (pedidos.length === 0) throw new Error('No hay pedidos para cerrar');
 
@@ -202,14 +208,24 @@ export async function closeTableAccount(
     return acc;
   }, []);
 
-  const totalMesa = pedidos.reduce((sum, p) => sum + p.total, 0);
+  const totalBruto = pedidos.reduce((sum, p) => sum + p.total, 0);
+  const descuento = opcionesFiscales?.descuento || 0;
+  const totalMesa = Math.max(0, totalBruto - descuento);
+  const subtotal = Math.round((totalMesa / 1.18) * 100) / 100;
+  const igv = Math.round((totalMesa - subtotal) * 100) / 100;
 
   // Crear registro único de venta
   const ventaData: Record<string, unknown> = {
     mesa,
     items: itemsConsolidados,
     total: totalMesa,
+    subtotal,
+    igv,
+    descuento,
     metodoPago,
+    tipoComprobante: opcionesFiscales?.tipoComprobante || 'boleta',
+    clienteDoc: opcionesFiscales?.clienteDoc || '',
+    clienteNombre: opcionesFiscales?.clienteNombre || '',
     cerradoEn: Timestamp.now(),
     pedidoId: pedidos.map(p => p.id).join(','), // Guardar todos los IDs para referencia
   };

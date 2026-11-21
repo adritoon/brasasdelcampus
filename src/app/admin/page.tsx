@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   Flame,
   Plus,
@@ -14,6 +14,10 @@ import {
   CalendarDays,
   BarChart3,
   Download,
+  Trophy,
+  Clock,
+  PieChart,
+  Filter,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import {
@@ -115,19 +119,116 @@ export default function AdminPage() {
     }
   };
 
-  // Stats de ventas
+  // Filtro de tiempo para análisis de ventas
+  const [filtroPeriodo, setFiltroPeriodo] = useState<'hoy' | '7dias' | 'mes' | 'todos' | 'custom'>('todos');
+  const [fechaDesde, setFechaDesde] = useState('');
+  const [fechaHasta, setFechaHasta] = useState('');
+
+  // Ventas filtradas según rango
+  const ventasFiltradas = useMemo(() => {
+    const ahora = new Date();
+    const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    const inicio7Dias = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+
+    return ventas.filter((v) => {
+      const fecha = new Date(v.cerradoEn);
+      if (filtroPeriodo === 'hoy') return fecha >= inicioHoy;
+      if (filtroPeriodo === '7dias') return fecha >= inicio7Dias;
+      if (filtroPeriodo === 'mes') return fecha >= inicioMes;
+      if (filtroPeriodo === 'custom') {
+        const d = fechaDesde ? new Date(fechaDesde + 'T00:00:00') : null;
+        const h = fechaHasta ? new Date(fechaHasta + 'T23:59:59') : null;
+        if (d && fecha < d) return false;
+        if (h && fecha > h) return false;
+        return true;
+      }
+      return true;
+    });
+  }, [ventas, filtroPeriodo, fechaDesde, fechaHasta]);
+
+  // Totales y estadísticas
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
   const ventasHoy = ventas.filter((v) => new Date(v.cerradoEn) >= hoy);
   const totalHoy = ventasHoy.reduce((s, v) => s + v.total, 0);
+  const totalPeriodo = ventasFiltradas.reduce((s, v) => s + v.total, 0);
   const totalGeneral = ventas.reduce((s, v) => s + v.total, 0);
 
-  // Agrupar ventas por día
-  const ventasPorDia = ventas.reduce<Record<string, number>>((acc, v) => {
-    const dia = new Date(v.cerradoEn).toLocaleDateString('es-PE');
-    acc[dia] = (acc[dia] || 0) + v.total;
-    return acc;
-  }, {});
+  // 1. Ranking Top 5 Platos Más Vendidos
+  const rankingPlatos = useMemo(() => {
+    const counts: Record<string, { count: number; total: number }> = {};
+    ventasFiltradas.forEach((v) => {
+      v.items.forEach((it) => {
+        if (!counts[it.nombre]) {
+          counts[it.nombre] = { count: 0, total: 0 };
+        }
+        counts[it.nombre].count += it.cantidad;
+        counts[it.nombre].total += it.precio * it.cantidad;
+      });
+    });
+
+    const sorted = Object.entries(counts)
+      .map(([nombre, data]) => ({ nombre, ...data }))
+      .sort((a, b) => b.count - a.count);
+
+    const maxCount = sorted.length > 0 ? sorted[0].count : 1;
+    return { list: sorted.slice(0, 5), maxCount };
+  }, [ventasFiltradas]);
+
+  // 2. Desglose de Ventas por Método de Pago
+  const metodoStats = useMemo(() => {
+    const totales = { efectivo: 0, yape: 0, plin: 0, tarjeta: 0 };
+    const conteos = { efectivo: 0, yape: 0, plin: 0, tarjeta: 0 };
+
+    ventasFiltradas.forEach((v) => {
+      if (v.pagos && v.pagos.length > 0) {
+        v.pagos.forEach((p) => {
+          totales[p.metodo] = (totales[p.metodo] || 0) + p.monto;
+          conteos[p.metodo] = (conteos[p.metodo] || 0) + 1;
+        });
+      } else {
+        const m = v.metodoPago || 'efectivo';
+        totales[m] = (totales[m] || 0) + v.total;
+        conteos[m] = (conteos[m] || 0) + 1;
+      }
+    });
+
+    const sumaTotal = Object.values(totales).reduce((a, b) => a + b, 0) || 1;
+    return {
+      totales,
+      conteos,
+      pctEfectivo: Math.round((totales.efectivo / sumaTotal) * 100),
+      pctYape: Math.round((totales.yape / sumaTotal) * 100),
+      pctPlin: Math.round((totales.plin / sumaTotal) * 100),
+      pctTarjeta: Math.round((totales.tarjeta / sumaTotal) * 100),
+    };
+  }, [ventasFiltradas]);
+
+  // 3. Distribución por Horas Pico (12:00 a 22:00)
+  const horasPico = useMemo(() => {
+    const horasRangos: Record<number, number> = {};
+    for (let h = 12; h <= 22; h++) horasRangos[h] = 0;
+
+    ventasFiltradas.forEach((v) => {
+      const hora = new Date(v.cerradoEn).getHours();
+      if (hora >= 12 && hora <= 22) {
+        horasRangos[hora] = (horasRangos[hora] || 0) + 1;
+      }
+    });
+
+    const maxOrders = Math.max(...Object.values(horasRangos), 1);
+    return { rangos: horasRangos, maxOrders };
+  }, [ventasFiltradas]);
+
+  // 4. Agrupar ventas por día
+  const ventasPorDia = useMemo(() => {
+    return ventasFiltradas.reduce<Record<string, number>>((acc, v) => {
+      const dia = new Date(v.cerradoEn).toLocaleDateString('es-PE');
+      acc[dia] = (acc[dia] || 0) + v.total;
+      return acc;
+    }, {});
+  }, [ventasFiltradas]);
 
   return (
     <div className={styles.page}>
@@ -344,43 +445,269 @@ export default function AdminPage() {
 
       {tab === 'ventas' && (
         <div className={styles.content}>
-          <h2 style={{ marginBottom: 'var(--space-xl)' }}>Historial de ventas</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+            <div>
+              <h2 style={{ margin: 0 }}>Dashboard de Ventas</h2>
+              <p style={{ color: 'var(--smoke-400)', fontSize: '0.875rem', marginTop: '2px' }}>
+                Monitoreo en tiempo real, platos más vendidos y comportamiento de cobros QR.
+              </p>
+            </div>
+            <button className="btn btn-ghost" onClick={() => {
+              const data = ventasFiltradas.map(v => ({
+                'ID Venta': v.id,
+                'Fecha': new Date(v.cerradoEn).toLocaleDateString('es-PE'),
+                'Hora': new Date(v.cerradoEn).toLocaleTimeString('es-PE'),
+                'Mesa': v.mesa,
+                'Comprobante': (v.tipoComprobante || 'Boleta').toUpperCase(),
+                'Cliente Doc': v.clienteDoc || '-',
+                'Cliente Nombre': v.clienteNombre || '-',
+                'Método de Pago': v.metodoPago.toUpperCase(),
+                'Detalle': v.items.map(it => `${it.cantidad}x ${it.nombre}`).join(' | '),
+                'Total (S/)': Number(v.total.toFixed(2)),
+              }));
+              const ws = XLSX.utils.json_to_sheet(data);
+              ws['!cols'] = [{wch: 25}, {wch: 12}, {wch: 10}, {wch: 8}, {wch: 14}, {wch: 14}, {wch: 22}, {wch: 15}, {wch: 55}, {wch: 12}];
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, "Ventas");
+              XLSX.writeFile(wb, `Reporte_Ventas_${filtroPeriodo}.xlsx`);
+            }} style={{ color: 'var(--amber-400)' }}>
+              <Download size={16} />
+              Exportar Excel ({ventasFiltradas.length})
+            </button>
+          </div>
 
-          {/* Stats */}
+          {/* Barra de Filtro de Fechas */}
+          <div className={styles.filterBar}>
+            <div className={styles.filterButtons}>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--smoke-400)', alignSelf: 'center', marginRight: '4px' }}>
+                <Filter size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: '4px' }} />
+                Período:
+              </span>
+              <button
+                className={`${styles.filterBtn} ${filtroPeriodo === 'todos' ? styles.filterBtnActive : ''}`}
+                onClick={() => setFiltroPeriodo('todos')}
+              >
+                Histórico
+              </button>
+              <button
+                className={`${styles.filterBtn} ${filtroPeriodo === 'hoy' ? styles.filterBtnActive : ''}`}
+                onClick={() => setFiltroPeriodo('hoy')}
+              >
+                Hoy
+              </button>
+              <button
+                className={`${styles.filterBtn} ${filtroPeriodo === '7dias' ? styles.filterBtnActive : ''}`}
+                onClick={() => setFiltroPeriodo('7dias')}
+              >
+                Últimos 7 días
+              </button>
+              <button
+                className={`${styles.filterBtn} ${filtroPeriodo === 'mes' ? styles.filterBtnActive : ''}`}
+                onClick={() => setFiltroPeriodo('mes')}
+              >
+                Este mes
+              </button>
+              <button
+                className={`${styles.filterBtn} ${filtroPeriodo === 'custom' ? styles.filterBtnActive : ''}`}
+                onClick={() => setFiltroPeriodo('custom')}
+              >
+                Rango
+              </button>
+            </div>
+
+            {filtroPeriodo === 'custom' && (
+              <div className={styles.customDateRange}>
+                <label>Desde:</label>
+                <input
+                  type="date"
+                  className={styles.customDateInput}
+                  value={fechaDesde}
+                  onChange={(e) => setFechaDesde(e.target.value)}
+                />
+                <label>Hasta:</label>
+                <input
+                  type="date"
+                  className={styles.customDateInput}
+                  value={fechaHasta}
+                  onChange={(e) => setFechaHasta(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Tarjetas de Estadísticas Principales */}
           <div className={styles.statsGrid}>
             <div className="stat-card">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                 <DollarSign size={18} style={{ color: 'var(--amber-500)' }} />
-                <span className="stat-label" style={{ margin: 0 }}>Ventas hoy</span>
+                <span className="stat-label" style={{ margin: 0 }}>Ingresos Período</span>
+              </div>
+              <div className="stat-value">S/ {totalPeriodo.toFixed(2)}</div>
+            </div>
+            <div className="stat-card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <ShoppingCart size={18} style={{ color: 'var(--amber-500)' }} />
+                <span className="stat-label" style={{ margin: 0 }}>Ventas cerradas</span>
+              </div>
+              <div className="stat-value">{ventasFiltradas.length}</div>
+            </div>
+            <div className="stat-card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <TrendingUp size={18} style={{ color: 'var(--amber-500)' }} />
+                <span className="stat-label" style={{ margin: 0 }}>Ventas Hoy</span>
               </div>
               <div className="stat-value">S/ {totalHoy.toFixed(2)}</div>
             </div>
             <div className="stat-card">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <ShoppingCart size={18} style={{ color: 'var(--amber-500)' }} />
-                <span className="stat-label" style={{ margin: 0 }}>Pedidos hoy</span>
-              </div>
-              <div className="stat-value">{ventasHoy.length}</div>
-            </div>
-            <div className="stat-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <TrendingUp size={18} style={{ color: 'var(--amber-500)' }} />
-                <span className="stat-label" style={{ margin: 0 }}>Total acumulado</span>
-              </div>
-              <div className="stat-value">S/ {totalGeneral.toFixed(2)}</div>
-            </div>
-            <div className="stat-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                 <BarChart3 size={18} style={{ color: 'var(--amber-500)' }} />
-                <span className="stat-label" style={{ margin: 0 }}>Promedio por venta</span>
+                <span className="stat-label" style={{ margin: 0 }}>Ticket Promedio</span>
               </div>
               <div className="stat-value">
-                S/ {ventas.length > 0 ? (totalGeneral / ventas.length).toFixed(2) : '0.00'}
+                S/ {ventasFiltradas.length > 0 ? (totalPeriodo / ventasFiltradas.length).toFixed(2) : '0.00'}
               </div>
             </div>
           </div>
 
-          {/* Ventas por día */}
+          {/* Gráficos Visuales de Análisis */}
+          <div className={styles.chartsGrid}>
+            {/* Gráfico 1: Top 5 Platos Más Vendidos */}
+            <div className={styles.chartCard}>
+              <div className={styles.chartHeader}>
+                <div className={styles.chartTitle}>
+                  <Trophy size={18} style={{ color: 'var(--amber-400)' }} />
+                  <span>Platos Más Vendidos</span>
+                </div>
+                <span className={styles.chartSubtitle}>Por unidades despachadas</span>
+              </div>
+
+              {rankingPlatos.list.length === 0 ? (
+                <p style={{ color: 'var(--smoke-400)', fontSize: '0.875rem', padding: '1rem', textAlign: 'center' }}>
+                  Sin datos en este período.
+                </p>
+              ) : (
+                <div className={styles.rankingList}>
+                  {rankingPlatos.list.map((item, idx) => {
+                    const pct = Math.round((item.count / rankingPlatos.maxCount) * 100);
+                    return (
+                      <div key={item.nombre} className={styles.rankingRow}>
+                        <div className={styles.rankingInfo}>
+                          <div className={styles.rankingName}>
+                            <span className={`${styles.rankingBadge} ${idx === 0 ? styles.rankingBadgeTop : ''}`}>
+                              {idx + 1}
+                            </span>
+                            <span>{item.nombre}</span>
+                          </div>
+                          <div className={styles.rankingNumbers}>
+                            <span className={styles.rankingQty}>{item.count} un.</span>
+                            <span className={styles.rankingAmount}>S/ {item.total.toFixed(2)}</span>
+                          </div>
+                        </div>
+                        <div className={styles.rankingBarBg}>
+                          <div className={styles.rankingBarFill} style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Gráfico 2: Métodos de Pago (Efectivo vs Yape/Plin vs Tarjeta) */}
+            <div className={styles.chartCard}>
+              <div className={styles.chartHeader}>
+                <div className={styles.chartTitle}>
+                  <PieChart size={18} style={{ color: '#00c7b1' }} />
+                  <span>Distribución de Pagos</span>
+                </div>
+                <span className={styles.chartSubtitle}>Impacto de Pagos Digitales</span>
+              </div>
+
+              <div className={styles.paymentSection}>
+                {/* Barra multi-segmento */}
+                <div className={styles.paymentMultiBar}>
+                  <div style={{ width: `${metodoStats.pctEfectivo}%`, background: '#4a7c59' }} title={`Efectivo: ${metodoStats.pctEfectivo}%`} />
+                  <div style={{ width: `${metodoStats.pctYape}%`, background: '#742284' }} title={`Yape: ${metodoStats.pctYape}%`} />
+                  <div style={{ width: `${metodoStats.pctPlin}%`, background: '#00bca8' }} title={`Plin: ${metodoStats.pctPlin}%`} />
+                  <div style={{ width: `${metodoStats.pctTarjeta}%`, background: '#4a6f8b' }} title={`Tarjeta: ${metodoStats.pctTarjeta}%`} />
+                </div>
+
+                <div className={styles.paymentLegend}>
+                  <div className={styles.paymentLegendItem}>
+                    <div className={styles.legendDot} style={{ background: '#742284' }} />
+                    <span className={styles.legendLabel}>Yape (QR)</span>
+                    <div className={styles.legendValues}>
+                      <span className={styles.legendMonto}>S/ {metodoStats.totales.yape.toFixed(2)}</span>
+                      <span className={styles.legendPercent}>{metodoStats.pctYape}%</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.paymentLegendItem}>
+                    <div className={styles.legendDot} style={{ background: '#00bca8' }} />
+                    <span className={styles.legendLabel}>Plin (QR)</span>
+                    <div className={styles.legendValues}>
+                      <span className={styles.legendMonto}>S/ {metodoStats.totales.plin.toFixed(2)}</span>
+                      <span className={styles.legendPercent}>{metodoStats.pctPlin}%</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.paymentLegendItem}>
+                    <div className={styles.legendDot} style={{ background: '#4a7c59' }} />
+                    <span className={styles.legendLabel}>Efectivo</span>
+                    <div className={styles.legendValues}>
+                      <span className={styles.legendMonto}>S/ {metodoStats.totales.efectivo.toFixed(2)}</span>
+                      <span className={styles.legendPercent}>{metodoStats.pctEfectivo}%</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.paymentLegendItem}>
+                    <div className={styles.legendDot} style={{ background: '#4a6f8b' }} />
+                    <span className={styles.legendLabel}>Tarjeta POS</span>
+                    <div className={styles.legendValues}>
+                      <span className={styles.legendMonto}>S/ {metodoStats.totales.tarjeta.toFixed(2)}</span>
+                      <span className={styles.legendPercent}>{metodoStats.pctTarjeta}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Gráfico 3: Horas Pico (Almuerzo vs Cena) */}
+            <div className={styles.chartCard} style={{ gridColumn: 'span 2' }}>
+              <div className={styles.chartHeader}>
+                <div className={styles.chartTitle}>
+                  <Clock size={18} style={{ color: 'var(--amber-500)' }} />
+                  <span>Distribución de Ventas por Hora Pico</span>
+                </div>
+                <span className={styles.chartSubtitle}>Comportamiento de 12:00 a 22:00</span>
+              </div>
+
+              <div className={styles.hoursHistogram}>
+                {Object.entries(horasPico.rangos).map(([horaStr, count]) => {
+                  const h = Number(horaStr);
+                  const pct = Math.max(8, Math.round((count / horasPico.maxOrders) * 100));
+                  const isPeak = count === horasPico.maxOrders && count > 0;
+                  const isActive = count > 0;
+                  return (
+                    <div key={h} className={styles.hourCol}>
+                      {count > 0 && <span className={styles.hourCount}>{count}</span>}
+                      <div
+                        className={`${styles.hourBar} ${isActive ? styles.hourBarActive : ''} ${isPeak ? styles.hourBarPeak : ''}`}
+                        style={{ height: `${pct}%` }}
+                        title={`${h}:00 hrs: ${count} ventas`}
+                      />
+                      <span className={styles.hourLabel}>{h}h</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--smoke-400)', marginTop: '8px', textAlign: 'center' }}>
+                Picos típicos: 13:00 - 15:00 (Turno Almuerzo universitario) y 19:00 - 21:00 (Turno Parrillas & Cena).
+              </p>
+            </div>
+          </div>
+
+          {/* Resumen por día */}
           {Object.keys(ventasPorDia).length > 0 && (
             <div className={styles.ventasDia}>
               <h3>
@@ -419,36 +746,16 @@ export default function AdminPage() {
 
           {/* Historial detallado */}
           <div className={styles.ventasHistorial}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0 }}>Últimas ventas</h3>
-              <button className="btn btn-ghost" onClick={() => {
-                const data = ventas.map(v => ({
-                  'ID Venta': v.id,
-                  'Fecha': new Date(v.cerradoEn).toLocaleDateString('es-PE'),
-                  'Hora': new Date(v.cerradoEn).toLocaleTimeString('es-PE'),
-                  'Mesa': v.mesa,
-                  'Método de Pago': v.metodoPago.toUpperCase(),
-                  'Detalle': v.items.map(it => `${it.cantidad}x ${it.nombre}`).join(' | '),
-                  'Total (S/)': Number(v.total.toFixed(2)),
-                }));
-                const ws = XLSX.utils.json_to_sheet(data);
-                ws['!cols'] = [{wch: 25}, {wch: 12}, {wch: 10}, {wch: 10}, {wch: 15}, {wch: 60}, {wch: 12}];
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Ventas");
-                XLSX.writeFile(wb, "Reporte_Ventas_Brasas.xlsx");
-              }} style={{ color: 'var(--amber-400)' }}>
-                <Download size={16} />
-                Exportar Excel
-              </button>
-            </div>
-            {ventas.length === 0 ? (
-              <p style={{ color: 'var(--smoke-400)' }}>Sin ventas registradas aún.</p>
+            <h3 style={{ marginBottom: '1rem' }}>Últimas ventas registradas ({ventasFiltradas.length})</h3>
+            {ventasFiltradas.length === 0 ? (
+              <p style={{ color: 'var(--smoke-400)' }}>Sin ventas en el período seleccionado.</p>
             ) : (
               <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table>
                   <thead>
                     <tr>
                       <th>Mesa</th>
+                      <th>Comprobante</th>
                       <th>Items</th>
                       <th>Método</th>
                       <th>Fecha</th>
@@ -456,16 +763,44 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {ventas.slice(0, 50).map((v) => (
+                    {ventasFiltradas.slice(0, 50).map((v) => (
                       <tr key={v.id}>
                         <td>
                           <span className="mesa-number">{v.mesa}</span>
                         </td>
                         <td>
+                          <span className="badge badge-closed" style={{ textTransform: 'uppercase', fontSize: '0.6875rem' }}>
+                            {v.tipoComprobante || 'Boleta'}
+                          </span>
+                          {v.clienteDoc && (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--smoke-400)', marginTop: '2px' }}>
+                              {v.clienteDoc}
+                            </div>
+                          )}
+                        </td>
+                        <td>
                           {v.items.map((it) => `${it.cantidad}x ${it.nombre}`).join(', ')}
                         </td>
                         <td>
-                          <span className="badge badge-closed" style={{ textTransform: 'capitalize' }}>
+                          <span
+                            className="badge"
+                            style={{
+                              background:
+                                v.metodoPago === 'yape'
+                                  ? 'rgba(116, 34, 132, 0.2)'
+                                  : v.metodoPago === 'plin'
+                                  ? 'rgba(0, 188, 168, 0.2)'
+                                  : 'rgba(74, 124, 89, 0.2)',
+                              color:
+                                v.metodoPago === 'yape'
+                                  ? '#d175e4'
+                                  : v.metodoPago === 'plin'
+                                  ? '#00c7b1'
+                                  : '#6cb67e',
+                              textTransform: 'uppercase',
+                              fontSize: '0.6875rem',
+                            }}
+                          >
                             {v.metodoPago}
                           </span>
                         </td>
